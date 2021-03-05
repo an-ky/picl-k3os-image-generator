@@ -58,10 +58,17 @@ MY_MAC=$(cat /sys/class/net/eth0/address)
 if [ -r "/k3os/system/config/${MY_MAC}.yaml" ]; then
 	ln -s /k3os/system/config/${MY_MAC}.yaml /k3os/system/config.yaml
 else
-	# TODO: retrieve config from a master?
-	echo "Error: No configuration found for MAC ${MY_MAC}." >&2
-	echo "Ensure that config/${MY_MAC}.yaml exists." >&2
-	exit 1
+	# try again using - as MAC separator. 
+	# Needed to support configs created on windows which does not allows : in paths
+        MY_MAC=$(cat $MY_MAC | sed 's/:/-/')
+        if [ -r "/k3os/system/config/${MY_MAC}.yaml" ]; then
+                ln -s /k3os/system/config/${MY_MAC}.yaml /k3os/system/config.yaml
+        else
+		# TODO: retrieve config from a master?
+		echo "Error: No configuration found for MAC ${MY_MAC}." >&2
+		echo "Ensure that config/${MY_MAC}.yaml exists." >&2
+		exit 1
+	fi
 fi
 
 echo "== Cleaning up and rebooting... =="
